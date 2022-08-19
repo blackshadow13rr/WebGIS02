@@ -2,14 +2,11 @@
   <div id="MapView"></div>
 
   <el-card class="box-card" id="orderlist">
-    <el-tabs class="demo-tabs" v-model="activeName">
+    <el-tabs class="demo-tabs" v-model="activeName" stretch>
       <el-tab-pane label="订单列表" name="odlist" id="odlist">
-        <el-button @click="getOrder">刷新订单</el-button>
-        <el-button id="getlocation" type="success" color="#5F9EA0">
-          <el-icon>
-            <AddLocation />
-          </el-icon>
-        </el-button>
+        <el-button id="getOrder"
+          >刷新订单<el-icon> <AddLocation /> </el-icon
+        ></el-button>
         <el-table
           :data="tableData"
           style="width: 100%"
@@ -35,7 +32,7 @@
           </el-table-column>
         </el-table>
       </el-tab-pane>
-      <el-tab-pane label="物资点列表" name="second">
+      <el-tab-pane label="物资点列表" name="second" :disabled="tabtwo">
         <div class="count">
           附近的物资点数量:
           <div class="count" id="count">0</div>
@@ -50,7 +47,7 @@
           <el-table-column prop="Phone_Number" label="电话" />
         </el-table>
       </el-tab-pane>
-      <el-tab-pane label="志愿者列表" name="third"
+      <el-tab-pane label="志愿者列表" name="third" :disabled="tabthree"
         ><div class="count">
           附近的志愿者人数:
           <div class="count" id="count">6</div>
@@ -65,7 +62,7 @@
           <el-table-column prop="Position" label="当前位置" width="250" />
           <el-table-column prop="Phone_Number" label="电话" /> </el-table
       ></el-tab-pane>
-      <el-tab-pane label="设置路径" name="fourth"
+      <el-tab-pane label="设置路径" name="fourth" :disabled="tabfour"
         ><div id="routeBox"></div>
         <div>
           <el-button type="success" round id="getroute" color="#5F9EA0"
@@ -124,7 +121,10 @@ export default {
       tempPoint: [],
       trigger: false,
       vlist: [],
-      activename: "second",
+      activeName: "odlist",
+      tabtwo: true,
+      tabthree: true,
+      tabfour: true,
     });
     let orderdata = reactive({
       Oid: "",
@@ -204,6 +204,7 @@ export default {
             let allStats = null;
             //停靠点
             let ordergeometry = null;
+            let volunteergeometry = null;
             let supplygeometry = null;
             let ordergeometryname = null;
             let supplygeometryname = null;
@@ -229,11 +230,15 @@ export default {
               url: "https://edutrial.geoscene.cn/geoscene/rest/services/C991networkService/NAServer/route",
               stops: [
                 new Stop({
-                  name: "【起点名】",
+                  name: "志愿者位置",
+                  geometry: volunteergeometry,
+                }),
+                new Stop({
+                  name: "物资点位置",
                   geometry: ordergeometry,
                 }),
                 new Stop({
-                  name: "【终点名】",
+                  name: "终点",
                   geometry: supplygeometry,
                 }),
               ],
@@ -383,7 +388,7 @@ export default {
             };
             //分别添加图层
             var supermarketLayer = new FeatureLayer({
-              url: "https://localhost:6443/arcgis/rest/services/Point/Point/MapServer/4",
+              url: "https://localhost:6443/arcgis/rest/services/POI/MapServer/0",
               popupTemplate: supermarkettemplate,
             });
             map.add(supermarketLayer, 0);
@@ -442,6 +447,8 @@ export default {
               orderdata.ODlon = supplygeometry.longitude;
               orderdata.ODlat = supplygeometry.latitude;
               sendOrder();
+              data.activeName = "fourth";
+              data.tabfour = false;
             });
             let sendOrder = async () => {
               let status = await SetOrder(orderdata);
@@ -451,12 +458,24 @@ export default {
                 $EleMsgNotifyError("分配失败，请重新设置");
               }
             };
-            //订单列表画点按钮
-            let locationBtn = document.getElementById("getlocation");
+            var clickgetorderlist = async () => {
+              let Order = await GetOrderList();
+              data.PointSet = [];
+              data.tableData = Order;
+              data.tableData.forEach(async (result, index) => {
+                let Point = await GetOrderPointById(result);
+                data.PointSet.push(Point[0]);
+                /* var jsonstr = JSON.parse(data.PointSet[0].Odetail);
+        console.log(jsonstr[0]); */
+              });
+            };
+            clickgetorderlist();
+            //刷新订单
+            let locationBtn = document.getElementById("getOrder");
             locationBtn.addEventListener("click", async () => {
+              clickgetorderlist();
               clear();
               addPoint(data.PointSet);
-              data.PointSet = [];
             });
             //点击列表事件
             let odlist = document.getElementById("odlist");
@@ -485,7 +504,8 @@ export default {
                   bufferGeometry = bufferLayer.graphics.items[0].geometry;
                   runQuery();
                   orderlistexpand.expand();
-                  data.activename = "second";
+                  data.activeName = "second";
+                  data.tabtwo = false;
                 });
                 data.trigger = false;
               }
@@ -655,6 +675,8 @@ export default {
                 ordergeometry = orderLayer.graphics.items[itemindex].geometry;
                 ordergeometryname =
                   orderLayer.graphics.items[itemindex].attributes.Oaddress;
+                data.activeName = "third";
+                data.tabthree = false;
               });
             //清空按钮
             function clear() {

@@ -83,7 +83,7 @@ export default {
             });
             map.add(RiskPointLayer, 0);
             var hospitalLayer = new FeatureLayer({
-              url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/C991Facilities/FeatureServer/3",
+              url: "https://localhost:6443/arcgis/rest/services/Point/Hospital/MapServer/0",
             });
             map.add(hospitalLayer, 0);
             //查询
@@ -96,7 +96,7 @@ export default {
                 }, */
                 {
                   onStatisticField:
-                    "district",
+                    "District",
                   outStatisticFieldName: "district_sum",
                   statisticType: "sum",
                 },
@@ -104,8 +104,8 @@ export default {
               const query = hospitalLayer.createQuery();
               /* query.geometry = sketchGeometry;
               query.distance = bufferSize; */
-              query.where = "district = '成华区'";
-              /* query.outStatistics = statDefinitions; */
+              query.where = "District = '成华区'"; 
+              query.outStatistics = statDefinitions;
 
               hospitalLayer.queryFeatures(query).then((result) => {
                 const allStats = result.features[0].attributes;

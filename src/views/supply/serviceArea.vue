@@ -64,7 +64,8 @@ export default {
             //网络分析服务url
             const url =
               "https://edutrial.geoscene.cn/geoscene/rest/services/C991networkService/NAServer/serviceArea";
-            let serviceAreaLayer = new GraphicsLayer();
+            /* let serviceAreaLayer = new GraphicsLayer(); */
+
             const map = new Map({
               basemap: "topo-vector",
             });
@@ -86,12 +87,42 @@ export default {
               view: view,
             });
             view.ui.add(homeBtn, "top-left");
-
-            view.map.addMany([serviceAreaLayer]);
+            var graphics = [];
+            let serviceAreaLayer = new FeatureLayer({
+              // create an instance of esri/layers/support/Field for each field object
+              title: "服务区",
+              fields: [
+                {
+                  name: "ObjectID",
+                  alias: "ObjectID",
+                  type: "oid",
+                },
+                {
+                  name: "Name",
+                  alias: "Name",
+                  type: "string",
+                },
+              ],
+              objectIdField: "ObjectID",
+              geometryType: "polygon",
+              spatialReference: { wkid: 102100 },
+              source: [], // adding an empty feature collection
+              popupTemplate: {
+                title: "{Name}",
+              },
+            });
+            map.add(serviceAreaLayer);
             //图例
             let legend = new Legend({
               view: view,
+              layerInfos: [
+                {
+                  layer: serviceAreaLayer,
+                  title: "服务区",
+                },
+              ],
             });
+            console.log(legend)
             view.ui.add(legend, "bottom-right");
             //在图层加载完成之后获取url中网络分析的描述属性
             Promise.all([
@@ -112,7 +143,7 @@ export default {
               ]; */
             });
             var supermarketLayer = new FeatureLayer({
-              url: "https://localhost:6443/arcgis/rest/services/Point/Point/MapServer/4",
+              url: "https://localhost:6443/arcgis/rest/services/POI/MapServer/0",
               title: "物资点",
             });
             map.add(supermarketLayer);
@@ -172,7 +203,7 @@ export default {
 
             async function executeServiceAreaTask(serviceAreaParameters) {
               //解构出返回的服务区分析结果
-              serviceAreaLayer.removeAll();
+              removeFeatures();
               const { serviceAreaPolygons } = await serviceArea.solve(
                 url,
                 serviceAreaParameters
@@ -186,10 +217,29 @@ export default {
                     width: 0.5,
                   },
                 };
+                console.log(graphic)
               }
-              serviceAreaLayer.graphics.addMany(serviceAreaPolygons, 0);
+              graphics = serviceAreaPolygons;
+              /* console.log(serviceAreaPolygons)
+              console.log(graphics) */
+              const addEdits = {
+                addFeatures: graphics,
+              };
+              serviceAreaLayer.applyEdits(addEdits);
+              /* serviceAreaLayer.graphics.addMany(serviceAreaPolygons, 0);
+              console.log(serviceAreaLayer.graphics.items[0]); */
             }
-
+            function removeFeatures() {
+              // query for the features you want to remove
+              serviceAreaLayer.queryFeatures().then((results) => {
+                // edits object tells apply edits that you want to delete the features
+                const deleteEdits = {
+                  deleteFeatures: results.features,
+                };
+                // apply edits to the layer
+                serviceAreaLayer.applyEdits(deleteEdits);
+              });
+            }
             //通过经纬度实现跳转
             async function zoomToCity(lon, lat) {
               if (!event.target.value) {

@@ -1,9 +1,9 @@
 <template>
   <div id="MapView"></div>
   <el-card class="box-card" id="searchDiv">
-    <el-tabs :tab-position="left" class="demo-tabs">
+    <el-tabs class="demo-tabs">
       <el-tab-pane label="综合查询"
-        ><el-form :model="form" label-width="80px" ref="formRef">
+        ><el-form label-width="80px" ref="formRef">
           <el-form-item label="医院名">
             <el-input v-model="name" />
           </el-form-item>
@@ -46,7 +46,7 @@
               id="queryBtn"
               >查找</el-button
             >
-            <el-button @click="reset(formRef)">重置</el-button>
+            <el-button @click="reset">重置</el-button>
           </el-form-item>
         </el-form></el-tab-pane
       >
@@ -63,7 +63,7 @@
         <el-button id="clearGeometry">清空</el-button>
       </el-tab-pane>
       <el-tab-pane label="部门查询"
-        ><el-form :model="form" label-width="80px" ref="formRef">
+        ><el-form label-width="80px" ref="formRef">
           <el-form-item label="医院名">
             <el-input v-model="departmentname" />
           </el-form-item>
@@ -85,30 +85,28 @@
             </el-select>
           </el-form-item>
           <el-form-item>
-            <el-button
-              type="primary"
-              @click="onSubmit"
-              color="#5F9EA0"
-              id="queryBtn2"
+            <el-button type="primary" color="#5F9EA0" id="queryBtn2"
               >查找</el-button
             >
-            <el-button @click="reset(formRef)">重置</el-button>
+            <el-button @click="reset">重置</el-button>
           </el-form-item>
         </el-form></el-tab-pane
       >
     </el-tabs>
   </el-card>
-  <el-card class="box-card" id="resultDiv">
-    <div class="count">
-      查找到:
-      <div class="count" id="count">0</div>
-      家医院
-    </div>
-    <el-table :data="hoslist" style="width: 100%" max-height="250">
-      <el-table-column prop="Address" label="地址" width="180" />
-      <el-table-column prop="Name" label="医院名" width="180" />
-      <el-table-column prop="Phone_Number" label="电话" /> </el-table
-  ></el-card>
+  <div id="resultDiv">
+    <el-card class="box-card">
+      <div class="count">
+        查找到:
+        <div class="count" id="count">0</div>
+        家医院
+      </div>
+      <el-table :data="hoslist" style="width: 100%" max-height="250">
+        <el-table-column prop="Address" label="地址" width="180" />
+        <el-table-column prop="Name" label="医院名" width="180" />
+        <el-table-column prop="Phone_Number" label="电话" /> </el-table
+    ></el-card>
+  </div>
 </template>
 
 <script>
@@ -125,10 +123,16 @@ export default {
       patientType: "",
       desc: "",
       hoslist: [],
+      hoslist2: [],
       area: "",
       departmentname: "",
       department: "",
       departmentarea: "",
+    });
+    let transform = reactive({
+      Address: "",
+      Name: "",
+      Phone_Number: "",
     });
     let reset = () => {
       form.name = "";
@@ -137,6 +141,9 @@ export default {
       form.patientType = "";
       form.area = "";
       form.hoslist = [];
+      form.departmentarea = "";
+      form.departmentname = "";
+      form.department = "";
       document.getElementById("count").innerHTML = 0;
     };
     let createView = () => {
@@ -212,6 +219,11 @@ export default {
               expandIconClass: "esri-icon-layer-list",
               content: searchDiv,
             });
+            const resultexpand = new Expand({
+              view: view,
+              expandIconClass: "esri-icon-layer-list",
+              content: resultDiv,
+            });
             //弹出窗口
             var popup = view.popup;
             popup.actions = [];
@@ -250,7 +262,7 @@ export default {
 
             //分别添加图层
             var EmergencyTreatment = new FeatureLayer({
-              url: "https://localhost:6443/arcgis/rest/services/Point/Point/MapServer/1",
+              url: "https://localhost:6443/arcgis/rest/services/POI/MapServer/1",
               /* popupTemplate: template, */
             });
             map.add(EmergencyTreatment);
@@ -260,11 +272,11 @@ export default {
             });
             map.add(hospitalLayer);
             var FeverClinic = new FeatureLayer({
-              url: "https://localhost:6443/arcgis/rest/services/Point/Point/MapServer/0",
+              url: "https://localhost:6443/arcgis/rest/services/POI/MapServer/3",
             });
             map.add(FeverClinic);
             var nucleicacidTest = new FeatureLayer({
-              url: "https://localhost:6443/arcgis/rest/services/Point/Point/MapServer/2",
+              url: "https://localhost:6443/arcgis/rest/services/POI/MapServer/2",
             });
             map.add(nucleicacidTest);
             //添加动态特效
@@ -428,13 +440,13 @@ export default {
                 }
               }
               if (form.type !== []) {
-                if (form.type === ["接收新冠患者", "接收疑似病例"]) {
+                if (form.type == ["接收新冠患者", "接收疑似病例"]) {
                   reception = "是";
                   suspectedcases = "是";
-                } else if (form.type === ["接收疑似病例"]) {
+                } else if (form.type == ["接收疑似病例"]) {
                   reception = "否";
                   suspectedcases = "是";
-                } else if (form.type === ["接收新冠患者"]) {
+                } else if (form.type == ["接收新冠患者"]) {
                   reception = "是";
                   suspectedcases = "否";
                 } else {
@@ -478,20 +490,73 @@ export default {
                     dataset.push(attributes);
                   });
                   form.hoslist = dataset;
+                  resultexpand.expand();
                 } else {
                   console.log("find nothing");
                 }
               });
             });
             let queryBtn2 = document.getElementById("queryBtn2");
-            queryBtn.addEventListener("click", () => {
+            queryBtn2.addEventListener("click", () => {
               let allStats = null;
               let sqlParam = "";
               let reception = "";
               let suspectedcases = "";
-              let query = hospitalLayer.createQuery();
-              query.where = sqlParam;
-              query.outFields = ["Name", "Address", "District", "field_1_2"];
+              if (form.departmentname !== "") {
+                sqlParam = "name like '%" + form.departmentname + "%'";
+              } else if (form.departmentarea !== "") {
+                if (sqlParam !== "") {
+                  sqlParam =
+                    sqlParam + " and DISTNAME = '" + form.departmentarea + "'";
+                } else {
+                  sqlParam = "DISTNAME = '" + form.departmentarea + "'";
+                }
+              }
+              let querylayer = null;
+              if (form.department !== "") {
+                if (form.department == "急诊") {
+                  querylayer = EmergencyTreatment;
+                } else if (form.department == "发热门诊") {
+                  querylayer = FeverClinic;
+                } else if (form.department == "核酸检测") {
+                  querylayer = nucleicacidTest;
+                }
+                let query = querylayer.createQuery();
+                query.where = sqlParam;
+                query.outFields = [
+                  "name",
+                  "description",
+                  "telephone",
+                  "DISTNAME",
+                ];
+                querylayer.queryFeatures(query).then(function (response) {
+                  allStats = response.features;
+                  var dataset = [];
+                  var transform = {
+                    Address: "",
+                    Name: "",
+                    Phone_Number: "",
+                  };
+                  if (allStats) {
+                    Nprogress.done();
+                    document.getElementById("count").innerHTML =
+                      allStats.length;
+                    allStats.forEach((result, index) => {
+                      const attributes = result.attributes;
+                      transform = {
+                        Address: attributes.description,
+                        Name: attributes.name,
+                        Phone_Number: attributes.telephone,
+                      };
+                      dataset.push(transform);
+                    });
+                    form.hoslist = dataset;
+                    resultexpand.expand();
+                  } else {
+                    console.log("find nothing");
+                  }
+                });
+              }
             });
             view.ui.remove("attribution");
             view.ui.add([
@@ -501,7 +566,7 @@ export default {
                 index: 2,
               },
               {
-                component: resultDiv,
+                component: resultexpand,
                 position: "top-right",
                 index: 2,
               },

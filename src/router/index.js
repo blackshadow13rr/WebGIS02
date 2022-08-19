@@ -120,6 +120,12 @@ const routes = [
                 component: () =>
                     import ("../views/map/DensityAnalysis.vue")
             },
+            {
+                path: "HeatMap",
+                name: "HeatMap",
+                component: () =>
+                    import ("../views/map/HeatMap.vue")
+            },
         ]
     },
     {
