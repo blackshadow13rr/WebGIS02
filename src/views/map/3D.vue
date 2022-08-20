@@ -67,7 +67,7 @@ export default {
 
           //添加场景图层
           const sceneLayer = new SceneLayer({
-            url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/C991_3Dbuilding/SceneServer/layers/0",
+            url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/C991_building/SceneServer/layers/0",
             popupEnabled: false,
             renderer: {
               type: "simple",
@@ -123,7 +123,7 @@ export default {
               view
                 .goTo({
                   center: location,
-                  tilt: 80,
+                  tilt: 45,
                   scale: 2000,
                   heading: 360 - getHeading(location, prevLocation),
                   rotation: 360 - getHeading(location, prevLocation),

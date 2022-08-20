@@ -8,6 +8,7 @@
           >刷新订单<el-icon> <AddLocation /> </el-icon
         ></el-button>
         <el-table
+          highlight-current-row
           :data="tableData"
           style="width: 100%"
           @row-click="gotoPoint"
@@ -41,7 +42,12 @@
           >分析最邻近</el-button
         >
         <el-divider style="margin: 24px 0 0 0" />
-        <el-table :data="splist" style="width: 100%" max-height="400">
+        <el-table
+          :data="splist"
+          style="width: 100%"
+          max-height="400"
+          highlight-current-row
+        >
           <el-table-column prop="Address" label="地址" width="180" />
           <el-table-column prop="Name" label="店名" width="180" />
           <el-table-column prop="Phone_Number" label="电话" />
@@ -67,6 +73,8 @@
         <div>
           <el-button type="success" round id="getroute" color="#5F9EA0"
             >生成路径</el-button
+          ><el-button type="success" round id="finish" color="#5F9EA0"
+            >完成调度</el-button
           >
         </div></el-tab-pane
       >
@@ -85,7 +93,6 @@
 </template>
 
 <script>
-import "@esri/calcite-components/dist/calcite/calcite.css";
 import { loadModules } from "esri-loader";
 import {
   GetOrderPoint,
@@ -157,7 +164,6 @@ export default {
           "esri/widgets/Expand",
           "esri/layers/GraphicsLayer",
           "esri/widgets/Sketch",
-          "esri/widgets/Sketch/SketchViewModel",
           "esri/widgets/Slider",
           "esri/geometry/geometryEngine",
           "esri/widgets/Directions",
@@ -168,6 +174,7 @@ export default {
           "esri/rest/closestFacility",
           "esri/rest/support/ClosestFacilityParameters",
           "esri/rest/support/FeatureSet",
+          "esri/widgets/Legend",
         ],
         options
       )
@@ -186,7 +193,6 @@ export default {
             Expand,
             GraphicsLayer,
             Sketch,
-            SketchViewModel,
             Slider,
             geometryEngine,
             Directions,
@@ -197,6 +203,7 @@ export default {
             closestFacility,
             ClosestFacilityParameters,
             FeatureSet,
+            Legend,
           ]) => {
             esriConfig.apiKey =
               "AAPK37853f2d8fd242f6ad9df392845bb0855YYrv-aaUh64MrNqmp51tQ6FZBa-YBx9mlRhkoWfEq0QOAMSzDrRbVxMEBBRfVXV";
@@ -209,11 +216,7 @@ export default {
             let ordergeometryname = null;
             let supplygeometryname = null;
             //路径模块
-            const polygonBarriers = [
-              new PolygonBarrier({
-                geometry: polygonBarrierGraphic(104.08, 30.68),
-              }),
-            ];
+            const polygonBarriers = [];
 
             function polygonBarrierGraphic(lon, lat) {
               return new Circle({
@@ -388,15 +391,21 @@ export default {
             };
             //分别添加图层
             var supermarketLayer = new FeatureLayer({
+              title: "物资点",
               url: "https://localhost:6443/arcgis/rest/services/POI/MapServer/0",
               popupTemplate: supermarkettemplate,
             });
             map.add(supermarketLayer, 0);
             var highriskLayer = new FeatureLayer({
-              url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/C991Facilities/FeatureServer/7",
+              title: "高风险地区",
+              url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/zhonggao/FeatureServer/0",
             });
             map.add(highriskLayer, 0);
-
+            var middleriskLayer = new FeatureLayer({
+              title: "中风险地区",
+              url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/zhonggao/FeatureServer/1",
+            });
+            map.add(middleriskLayer, 0);
             //搜索图层
             var searchWidget = new Search({
               view: view,
@@ -410,18 +419,6 @@ export default {
                 },
               ],
             });
-            // //搜索建立缓冲区
-            // searchWidget.on("select-result", function (event) {
-            //   createbufferBtn.addEventListener("click", () => {
-            //     bufferLayer.removeAll();
-            //     createBuffer(event.result.feature.geometry);
-            //     runQuery();
-            //   });
-            // });
-            // view.ui.add(searchWidget, {
-            //   position: "top-right",
-            //   index: 2,
-            // });
             //添加动态特效
             let highlight;
             let lastUid;
@@ -476,6 +473,11 @@ export default {
               clickgetorderlist();
               clear();
               addPoint(data.PointSet);
+            });
+            //完成订单
+            let finishBtn = document.getElementById("finish");
+            finishBtn.addEventListener("click", async () => {
+              $EleMsgNotifySuccess("完成规划");
             });
             //点击列表事件
             let odlist = document.getElementById("odlist");
@@ -700,21 +702,29 @@ export default {
                 Name: "张三",
                 Position: "建设北路二段5号附1号35栋",
                 Phone_Number: "15381007036",
+                lat: "100",
+                lon: "",
               },
               {
                 Name: "李四",
                 Position: "建设北路二段5号附1号35栋",
                 Phone_Number: "15381007036",
+                lat: "100",
+                lon: "",
               },
               {
                 Name: "王五",
                 Position: "建设北路二段5号附1号35栋",
                 Phone_Number: "15381007036",
+                lat: "100",
+                lon: "",
               },
               {
                 Name: "赵六",
                 Position: "建设北路二段5号附1号35栋",
                 Phone_Number: "15381007036",
+                lat: "100",
+                lon: "",
               },
             ];
 
@@ -815,6 +825,15 @@ export default {
                   poly = new PolygonBarrier({ geometry: element.geometry });
                   polygonBarriers.push(poly);
                 });
+              });
+              const query2 = middleriskLayer.createQuery();
+              query.returnGeometry = true;
+              middleriskLayer.queryFeatures(query2).then(function (response) {
+                let poly = null;
+                response.features.forEach((element) => {
+                  poly = new PolygonBarrier({ geometry: element.geometry });
+                  polygonBarriers.push(poly);
+                });
                 routeLayer.polygonBarriers = polygonBarriers;
               });
             }
@@ -850,29 +869,23 @@ export default {
                 runQuery();
               }
             });
+            view.ui.add(
+              new Legend({
+                view: view,
+              }),
+              "bottom-right"
+            );
           }
         )
         .catch((e) => {
           console.log("出现错误" + e.message);
         });
     };
-    let getOrder = async () => {
-      let Order = await GetOrderList();
-      data.PointSet = [];
-      data.tableData = Order;
-      data.tableData.forEach(async (result, index) => {
-        let Point = await GetOrderPointById(result);
-        data.PointSet.push(Point[0]);
-        /* var jsonstr = JSON.parse(data.PointSet[0].Odetail);
-        console.log(jsonstr[0]); */
-      });
-    };
     onMounted(() => {
       createView();
     });
     return {
       ...toRefs(data),
-      getOrder,
       filterTag,
       createView,
       gotoPoint,

@@ -22,6 +22,7 @@ export default {
           "esri/widgets/Home",
           "esri/layers/FeatureLayer",
           "esri/widgets/TimeSlider",
+          "esri/layers/MapImageLayer",
         ],
         options
       )
@@ -33,12 +34,13 @@ export default {
             Home,
             FeatureLayer,
             TimeSlider,
+            MapImageLayer,
           ]) => {
             esriConfig.apiKey =
               "AAPK37853f2d8fd242f6ad9df392845bb0855YYrv-aaUh64MrNqmp51tQ6FZBa-YBx9mlRhkoWfEq0QOAMSzDrRbVxMEBBRfVXV";
 
             var map = new Map({
-              basemap: "osm",
+              basemap: "topo-vector",
             });
             var view = new MapView({
               container: "Container",
@@ -58,20 +60,39 @@ export default {
               url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/timeAnalysis/FeatureServer/1",
             });
             map.add(OptimizedHotSpot);
-/*             var timeAnalysis = new FeatureLayer({
+            var highriskLayer = new FeatureLayer({
+              url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/zhonggao/FeatureServer/0",
+            });
+            map.add(highriskLayer);
+            var middleriskLayer = new FeatureLayer({
+              url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/zhonggao/FeatureServer/1",
+            });
+            console.log(middleriskLayer);
+            map.add(middleriskLayer);
+            var timeAnalysis = new MapImageLayer({
+              url: "https://edutrial.geoscene.cn/geoscene/rest/services/timeA/MapServer",
+            });
+            map.add(timeAnalysis);
+            var timeAnalysis = new FeatureLayer({
               url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/timeAnalysis/FeatureServer/0",
             });
-            map.add(timeAnalysis); */
-            var HeatmaptimeAnalysis = new FeatureLayer({
-              url: "https://localhost:6443/arcgis/rest/services/HeatMapTime/MapServer/0",
-            });
-            map.add(HeatmaptimeAnalysis);
-            view.whenLayerView(HeatmaptimeAnalysis).then((lv) => {
+            map.add(timeAnalysis);
+            view.whenLayerView(middleriskLayer).then((lv) => {
               // around up the full time extent to full hour
               timeSlider.fullTimeExtent =
-                HeatmaptimeAnalysis.timeInfo.fullTimeExtent.expandTo("hours");
+                middleriskLayer.timeInfo.fullTimeExtent.expandTo("hours");
               timeSlider.stops = {
-                interval: HeatmaptimeAnalysis.timeInfo.interval,
+                interval: middleriskLayer.timeInfo.interval,
+              };
+              timeSlider.fullTimeExtent.start =
+                "Mon Aug 01 2022 00:00:00 GMT+0800 (GMT+08:00)";
+              timeSlider.fullTimeExtent.end =
+                "Sun Aug 07 2022 00:00:00 GMT+0800 (GMT+08:00)";
+              timeSlider.stops = {
+                interval: {
+                  value: 12,
+                  unit: "hours",
+                },
               };
             });
             //时间轴微件

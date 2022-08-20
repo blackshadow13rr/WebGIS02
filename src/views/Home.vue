@@ -62,10 +62,10 @@
             </el-icon>
             <span>物资</span>
           </template>
-          <el-menu-item index="/Home/Order">
+          <el-menu-item index="/Home/Supply">
             <span>订单管理</span>
           </el-menu-item>
-          <el-menu-item index="/Home/Supply">
+          <el-menu-item index="/Home/Order">
             <span>物资调度</span>
           </el-menu-item>
           <el-sub-menu index="1-4">
@@ -81,10 +81,13 @@
             </el-icon>
             <span>医院</span>
           </template>
+          <el-menu-item index="/Home/GradingSymbol">
+            <span>医院资源</span>
+          </el-menu-item>
           <el-menu-item index="/Home/Hospital">
             <span>医院查询</span>
           </el-menu-item>
-          <el-menu-item index="/Home/Hospital">
+          <el-menu-item index="/Home/HosOrder">
             <span>人员调度</span>
           </el-menu-item>
         </el-sub-menu>

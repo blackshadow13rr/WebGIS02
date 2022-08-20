@@ -58,7 +58,7 @@ export default {
               "AAPK37853f2d8fd242f6ad9df392845bb0855YYrv-aaUh64MrNqmp51tQ6FZBa-YBx9mlRhkoWfEq0QOAMSzDrRbVxMEBBRfVXV";
 
             var map = new Map({
-              basemap: "osm",
+              basemap: "topo-vector",
             });
             var view = new MapView({
               container: "Container",
@@ -97,7 +97,6 @@ export default {
                 {
                   onStatisticField:
                     "District",
-                  outStatisticFieldName: "district_sum",
                   statisticType: "sum",
                 },
               ];

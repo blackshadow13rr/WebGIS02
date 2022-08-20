@@ -120,3 +120,33 @@ export let SetOrder = async(orderdata) => {
     let results = await $post("/Map/SetOrder", Order);
     return results;
 }
+export let GetHosList = async() => {
+    let results = await $get("/Map/GetHosList");
+    return results;
+}
+export let GetHosPointById = async(data) => {
+    let Id = data.Oid
+    let Order = {
+        Oid: Id
+    }
+    let results = await $get("/Map/GetHosPointById", Order);
+    return results;
+}
+export let SetHosOrder = async(orderdata) => {
+    let Id = orderdata.Oid
+    let destination = orderdata.Odestination
+    let Dlon = orderdata.ODlon
+    let Dlat = orderdata.ODlat
+    let Order = {
+        Oid: Id,
+        Odestination: destination,
+        ODlon: Dlon,
+        ODlat: Dlat,
+    }
+    let results = await $post("/Map/SetHosOrder", Order);
+    return results;
+}
+export let Getvolunteer = async() => {
+    let results = await $get("/Map/Getvolunteer");
+    return results;
+}

@@ -4,14 +4,15 @@
 
 <script>
 import { loadModules } from "esri-loader";
+import { onMounted } from "vue";
 export default {
-  name: "density",
-  methods: {
-    createView() {
+  setup() {
+    let createView = () => {
       var options = {
-        url: "https://js.arcgis.com/4.24/init.js",
+        url: "https://js.arcgis.com/4.24/",
         css: "https://js.arcgis.com/4.24/esri/themes/light/main.css",
       };
+
       loadModules(
         [
           "esri/config",
@@ -25,6 +26,7 @@ export default {
           "esri/widgets/Compass",
           "esri/geometry/Extent",
           "esri/layers/MapImageLayer",
+          "esri/layers/FeatureLayer",
         ],
         options
       ).then(
@@ -40,14 +42,17 @@ export default {
           Compass,
           Extent,
           MapImageLayer,
+          FeatureLayer,
         ]) => {
           esriConfig.apiKey =
             "AAPK37853f2d8fd242f6ad9df392845bb0855YYrv-aaUh64MrNqmp51tQ6FZBa-YBx9mlRhkoWfEq0QOAMSzDrRbVxMEBBRfVXV";
 
           const layer = new MapImageLayer({
-            url: "https://edutrial.geoscene.cn/geoscene/rest/services/C991_densityAnalysis/MapServer",
-            blendMode: "average"
+            url: "https://edutrial.geoscene.cn/geoscene/rest/services/C991_hosGradingSymbol/MapServer",
+            blendMode: "average",
+            title:"医疗资源",
           });
+
           const map = new Map({
             basemap: "topo-vector",
             layers: [layer],
@@ -81,7 +86,7 @@ export default {
             view: view,
             content: legend,
             expandTooltip: "Expand Legend",
-            expanded: false,
+            expanded: true,
           });
           const compass = new Compass({
             view: view,
@@ -106,20 +111,18 @@ export default {
           });
         }
       );
-    },
-  },
-  mounted: function () {
-    this.createView();
-  },
-  beforeDestory() {
-    if (this.view) {
-      this.view.container = null;
-    }
+    };
+    onMounted(() => {
+      createView();
+    });
+    return {
+      createView,
+    };
   },
 };
 </script>
 
-<style scoped>
+<style  scoped>
 #MapView {
   padding: 0;
   margin: 0;

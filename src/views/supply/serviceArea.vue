@@ -11,6 +11,12 @@
       <option selected value="walk">步行</option>
     </select>
   </div>
+  <div id="legend">
+    <div style="font-size: 18px;">服务区</div>
+    <div class="linebox"><div id="purple"></div><span class="text">0——2</span></div>
+    <div class="linebox"><div id="purple2"></div><span class="text">2——4</span></div>
+    <div class="linebox"><div id="purple3"></div><span class="text">4——6</span></div>
+  </div>
 </template>
 
 <script>
@@ -64,7 +70,7 @@ export default {
             //网络分析服务url
             const url =
               "https://edutrial.geoscene.cn/geoscene/rest/services/C991networkService/NAServer/serviceArea";
-            /* let serviceAreaLayer = new GraphicsLayer(); */
+            let serviceAreaLayer = new GraphicsLayer();
 
             const map = new Map({
               basemap: "topo-vector",
@@ -88,42 +94,7 @@ export default {
             });
             view.ui.add(homeBtn, "top-left");
             var graphics = [];
-            let serviceAreaLayer = new FeatureLayer({
-              // create an instance of esri/layers/support/Field for each field object
-              title: "服务区",
-              fields: [
-                {
-                  name: "ObjectID",
-                  alias: "ObjectID",
-                  type: "oid",
-                },
-                {
-                  name: "Name",
-                  alias: "Name",
-                  type: "string",
-                },
-              ],
-              objectIdField: "ObjectID",
-              geometryType: "polygon",
-              spatialReference: { wkid: 102100 },
-              source: [], // adding an empty feature collection
-              popupTemplate: {
-                title: "{Name}",
-              },
-            });
             map.add(serviceAreaLayer);
-            //图例
-            let legend = new Legend({
-              view: view,
-              layerInfos: [
-                {
-                  layer: serviceAreaLayer,
-                  title: "服务区",
-                },
-              ],
-            });
-            console.log(legend)
-            view.ui.add(legend, "bottom-right");
             //在图层加载完成之后获取url中网络分析的描述属性
             Promise.all([
               view.when(),
@@ -137,10 +108,6 @@ export default {
                 .getElementById("selectTravelMode")
                 .addEventListener("change", changeTravelMode);
               createServiceAreas(view.center);
-              legend.view = view;
-              /* legend.layerInfos = [
-                { layer: serviceAreaLayer, title: "服务区" },
-              ]; */
             });
             var supermarketLayer = new FeatureLayer({
               url: "https://localhost:6443/arcgis/rest/services/POI/MapServer/0",
@@ -153,7 +120,7 @@ export default {
               unit: "metric",
             });
             view.ui.add(scaleBar, "bottom-right");
-
+            view.ui.add("legend", "bottom-left");
             //点击地图创建分析服务区
             view.on("click", (event) => {
               /* Nprogress.start(); */
@@ -203,7 +170,7 @@ export default {
 
             async function executeServiceAreaTask(serviceAreaParameters) {
               //解构出返回的服务区分析结果
-              removeFeatures();
+              serviceAreaLayer.removeAll();
               const { serviceAreaPolygons } = await serviceArea.solve(
                 url,
                 serviceAreaParameters
@@ -211,6 +178,7 @@ export default {
               for (const graphic of serviceAreaPolygons) {
                 graphic.symbol = {
                   type: "simple-fill",
+                  title: "",
                   color: [149, 80, 159, 0.35],
                   outline: {
                     color: "white",
@@ -219,26 +187,8 @@ export default {
                 };
                 console.log(graphic)
               }
-              graphics = serviceAreaPolygons;
-              /* console.log(serviceAreaPolygons)
-              console.log(graphics) */
-              const addEdits = {
-                addFeatures: graphics,
-              };
-              serviceAreaLayer.applyEdits(addEdits);
-              /* serviceAreaLayer.graphics.addMany(serviceAreaPolygons, 0);
-              console.log(serviceAreaLayer.graphics.items[0]); */
-            }
-            function removeFeatures() {
-              // query for the features you want to remove
-              serviceAreaLayer.queryFeatures().then((results) => {
-                // edits object tells apply edits that you want to delete the features
-                const deleteEdits = {
-                  deleteFeatures: results.features,
-                };
-                // apply edits to the layer
-                serviceAreaLayer.applyEdits(deleteEdits);
-              });
+              serviceAreaLayer.graphics.addMany(serviceAreaPolygons, 0);
+              
             }
             //通过经纬度实现跳转
             async function zoomToCity(lon, lat) {
@@ -307,5 +257,37 @@ body,
 #selectTravelMode {
   min-width: 270px;
   font-size: 16px;
+}
+
+#legend {
+  padding: 20px;
+  display: flex;
+  background-color: #fff;
+  height: 150px;
+  width: 200px;
+  justify-content: space-around;
+  align-content: space-around;
+  flex-direction: column;
+}
+.linebox{
+  display: flex;
+}
+#purple{
+  background-color: rgba(149, 80, 159, 0.5);
+  height: 20px;
+  width: 40px;
+}
+#purple2{
+  background-color: rgba(149, 80, 159, 0.35);
+  height: 20px;
+  width: 40px;
+}
+#purple3{
+  background-color: rgba(149, 80, 159, 0.2);
+  height: 20px;
+  width: 40px;
+}
+.text{
+  margin-left: 15px;
 }
 </style>

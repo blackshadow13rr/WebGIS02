@@ -99,7 +99,7 @@
       <div class="count">
         查找到:
         <div class="count" id="count">0</div>
-        家医院
+        处医疗设施点
       </div>
       <el-table :data="hoslist" style="width: 100%" max-height="250">
         <el-table-column prop="Address" label="地址" width="180" />
@@ -168,6 +168,7 @@ export default {
           "esri/widgets/Sketch",
           "esri/widgets/Slider",
           "esri/geometry/geometryEngine",
+          "esri/widgets/Legend",
           // "esri/Basemap",
           // "esri/layers/TileLayer",
         ],
@@ -189,13 +190,14 @@ export default {
             Sketch,
             Slider,
             geometryEngine,
+            Legend,
             // Basemap,
             // TileLayer,
           ]) => {
             esriConfig.apiKey =
               "AAPK37853f2d8fd242f6ad9df392845bb0855YYrv-aaUh64MrNqmp51tQ6FZBa-YBx9mlRhkoWfEq0QOAMSzDrRbVxMEBBRfVXV";
             var map = new Map({
-              basemap: "osm",
+              basemap: "topo-vector",
             });
             var view = new MapView({
               container: "MapView",
@@ -262,20 +264,24 @@ export default {
 
             //分别添加图层
             var EmergencyTreatment = new FeatureLayer({
+              title: "急诊部门",
               url: "https://localhost:6443/arcgis/rest/services/POI/MapServer/1",
               /* popupTemplate: template, */
             });
             map.add(EmergencyTreatment);
             var hospitalLayer = new FeatureLayer({
+              title: "综合医院",
               url: "https://localhost:6443/arcgis/rest/services/Point/Hospital/MapServer/0",
               /* popupTemplate: template, */
             });
             map.add(hospitalLayer);
             var FeverClinic = new FeatureLayer({
+              title: "发热部门",
               url: "https://localhost:6443/arcgis/rest/services/POI/MapServer/3",
             });
             map.add(FeverClinic);
             var nucleicacidTest = new FeatureLayer({
+              title: "核酸检测点",
               url: "https://localhost:6443/arcgis/rest/services/POI/MapServer/2",
             });
             map.add(nucleicacidTest);
@@ -362,7 +368,7 @@ export default {
               const query = nucleicacidTest.createQuery();
               query.geometry = bufferGeometry;
               query.distance = slider.values;
-              query.outFields = ["Name", "PopupInfo"];
+              query.outFields = ["name", "description", "telephone"];
               query.returnGeometry = true;
               nucleicacidTest.queryFeatures(query).then(function (response) {
                 allStats = response.features;
@@ -562,7 +568,7 @@ export default {
             view.ui.add([
               {
                 component: searchexpand,
-                position: "top-left",
+                position: "bottom-left",
                 index: 2,
               },
               {
@@ -571,7 +577,12 @@ export default {
                 index: 2,
               },
             ]);
-            //缓冲区
+            view.ui.add(
+              new Legend({
+                view: view,
+              }),
+              "top-right"
+            );
           }
         )
         .catch((e) => {

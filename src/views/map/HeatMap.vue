@@ -62,6 +62,7 @@ export default {
           const supermarketLayer = new FeatureLayer({
             url: "https://localhost:6443/arcgis/rest/services/POI/MapServer/0",
             title: "物资点热力图",
+            view
           });
           map.add(supermarketLayer);
           supermarketLayer.renderer = {
@@ -76,7 +77,7 @@ export default {
             ],
             minDensity: 20,
             maxDensity: 500,
-            radius: 10,
+            radius: 1,
           };
           console.log(supermarketLayer);
           view.ui.add(

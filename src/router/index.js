@@ -126,6 +126,18 @@ const routes = [
                 component: () =>
                     import ("../views/map/HeatMap.vue")
             },
+            {
+                path: "HosOrder",
+                name: "HosOrder",
+                component: () =>
+                    import ("../views/hospital/HosOrder.vue")
+            },
+            {
+                path: "GradingSymbol",
+                name: "GradingSymbol",
+                component: () =>
+                    import ("../views/hospital/GradingSymbol.vue")
+            },
         ]
     },
     {

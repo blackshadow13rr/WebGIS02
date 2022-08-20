@@ -8,7 +8,6 @@
         </div>
         <div class="text item">检测人数：</div>
         <div class="bottom" style="background-color: #529b2e">
-          更多信息 <el-icon><CirclePlusFilled /></el-icon>
         </div>
       </el-card>
       <el-card class="box-card" style="background-color: #409eff">
@@ -18,7 +17,6 @@
         </div>
         <div class="text item">上报人数：</div>
         <div class="bottom">
-          更多信息 <el-icon><CirclePlusFilled /></el-icon>
         </div>
       </el-card>
       <el-card class="box-card" style="background-color: #e6a23c">
@@ -28,7 +26,6 @@
         </div>
         <div class="text item">新增风险地区：</div>
         <div class="bottom" style="background-color: #b88230">
-          更多信息 <el-icon><CirclePlusFilled /></el-icon>
         </div>
       </el-card>
       <el-card class="box-card" style="background-color: #f56c6c">
@@ -38,8 +35,6 @@
         </div>
         <div class="text item">新增患者：</div>
         <div class="bottom" style="background-color: #c45656">
-          更多信息
-          <el-icon><CirclePlusFilled /></el-icon>
         </div>
       </el-card>
     </div>
@@ -93,9 +88,8 @@ export default {
   .box {
     display: flex;
     padding: 40px 20px;
+    justify-content: space-around;
     .box-card {
-      margin: 0 30px;
-      justify-content: space-between;
       position: relative;
       color: aliceblue;
       background-color: #409eff;
@@ -121,7 +115,6 @@ export default {
 }
 
 .card-header {
-  display: flex;
   justify-content: space-between;
   align-items: center;
 }

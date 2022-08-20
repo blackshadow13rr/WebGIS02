@@ -1,4 +1,3 @@
-var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
@@ -6,6 +5,7 @@ var logger = require('morgan');
 var cors = require("cors");
 var crypto = require("crypto");
 var jwt = require("jsonwebtoken");
+var Guid = require("guid");
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -239,7 +239,6 @@ app.get("/Map/GetOrderPoint", (req, res) => {
         Order: req.query.Ostate,
     }
     let sqlParams = [data.Order];
-    //data.Order = "进行中"
     db.query("select * from school.order WHERE Ostate = '" + data.Order + "'", function(error, results, fields) {
         if (error) {
             console.log(error)
@@ -249,13 +248,12 @@ app.get("/Map/GetOrderPoint", (req, res) => {
     })
 });
 
-app.get("/Map/GetOrderPoint", (req, res) => {
+app.get("/Map/GetOrderPointById", (req, res) => {
     let data = {
-        Order: req.query.Ostate,
+        Order: req.query.Oid,
     }
     let sqlParams = [data.Order];
-    //data.Order = "进行中"
-    db.query("select * from school.order WHERE Ostate = '" + data.Order + "'", function(error, results, fields) {
+    db.query("select * from school.order WHERE Oid = '" + data.Order + "'", function(error, results, fields) {
         if (error) {
             console.log(error)
         } else {
@@ -263,6 +261,7 @@ app.get("/Map/GetOrderPoint", (req, res) => {
         }
     })
 });
+
 app.post("/Map/SetOrder", (req, res) => {
     let RegData = {
         Oid: req.body.Oid,
@@ -276,6 +275,69 @@ app.post("/Map/SetOrder", (req, res) => {
             res.send({ statusCode: 0, msg: '分配失败，请重试' })
         } else {
             res.send({ statusCode: 200, msg: '分配成功' })
+        }
+    })
+});
+
+app.get("/Map/GetHosList", (req, res) => {
+    db.query("select Oid,Oaddress,Ostate from school.hospital_order", function(error, results, fields) {
+        if (error) {
+            console.log(error)
+        } else {
+            res.send(results)
+        }
+    })
+});
+
+app.get("/Map/GetHosPointById", (req, res) => {
+    let data = {
+        Order: req.query.Oid,
+    }
+    db.query("select * from school.hospital_order WHERE Oid = '" + data.Order + "'", function(error, results, fields) {
+        if (error) {
+            console.log(error)
+        } else {
+            res.send(results)
+        }
+    })
+});
+
+app.post("/Map/SetHosOrder", (req, res) => {
+    let RegData = {
+        Oid: req.body.Oid,
+        Odestination: req.body.Odestination,
+        ODlon: req.body.ODlon,
+        ODlat: req.body.ODlat,
+    }
+    let sqlParams = [RegData.Odestination, RegData.ODlat, RegData.ODlon, RegData.Oid];
+    db.query('UPDATE school.hospital_order SET Odestination = ?, ODlat = ?, ODlon = ?,Ostate = "待处理" WHERE(Oid = ?)', sqlParams, function(err, data) {
+        if (err) {
+            res.send({ statusCode: 0, msg: '分配失败，请重试' })
+        } else {
+            res.send({ statusCode: 200, msg: '分配成功' })
+        }
+    })
+});
+
+app.get("/Map/GetHosPointById", (req, res) => {
+    let data = {
+        Order: req.query.Oid,
+    }
+    db.query("select * from school.hospital_order WHERE Oid = '" + data.Order + "'", function(error, results, fields) {
+        if (error) {
+            console.log(error)
+        } else {
+            res.send(results)
+        }
+    })
+});
+
+app.get("/Map/Getvolunteer", (req, res) => {
+    db.query("select * from school.rolelist", function(error, results, fields) {
+        if (error) {
+            console.log(error)
+        } else {
+            res.send(results)
         }
     })
 });
@@ -302,6 +364,20 @@ app.get("/query", (req, res) => {
 });
 
 
+
+app.get("/order/query/user", (req, res) => {
+    let sql = 'SELECT * FROM school.order where Ouser = ?;';
+    var sqlParams = [req.query["username"]];
+    db.query(sql, sqlParams, (e, results) => {
+        if (!e) {
+            res.send(results);
+        } else {
+            console.log(e.message);
+        }
+    })
+})
+
+
 app.get("/order/query", (req, res) => {
     let sql = 'SELECT * FROM school.order;';
     var sqlParams = [];
@@ -317,6 +393,45 @@ app.get("/order/query", (req, res) => {
 app.get("/order/update", (req, res) => {
     let sql = 'update school.order set Ostate = "进行中" where Oid = ?;';
     var sqlParams = [req.query["Oid"]];
+    db.query(sql, sqlParams, (e, results) => {
+        if (!e) {
+            res.send(results);
+        } else {
+            console.log(e.message);
+        }
+    })
+})
+
+app.post("/order/add", (req, res) => {
+    let sql = "insert into school.order(Oid, Ouser, Oaddress, OPlat, OPlon, Odetail, Ostate) values(?, ?, ?, ?, ?, ?, '待分配');";
+    let Oid = Guid.raw();
+    var sqlParams = [Oid, req.body["Ouser"], req.body["Oaddress"], req.body["OPlat"], req.body["OPlon"], req.body["Odetail"]];
+    db.query(sql, sqlParams, (e, results) => {
+        if (!e) {
+            res.send(results);
+        } else {
+            console.log(e.message);
+        }
+    })
+})
+
+
+app.get("/hospital_order/query", (req, res) => {
+    let sql = 'SELECT * FROM school.hospital_order;';
+    var sqlParams = [];
+    db.query(sql, sqlParams, (e, results) => {
+        if (!e) {
+            res.send(results);
+        } else {
+            console.log(e.message);
+        }
+    })
+})
+
+app.post("/hospital_order/add", (req, res) => {
+    let sql = "insert into school.hospital_order(Oid, Ouser, Oaddress, OPlat, OPlon, Oparams, Ostate) values(?, ?, ?, ?, ?, ?, '待分配');";
+    let Oid = Guid.raw();
+    var sqlParams = [Oid, req.body["Ouser"], req.body["Oaddress"], req.body["OPlat"], req.body["OPlon"], req.body["Oparams"]];
     db.query(sql, sqlParams, (e, results) => {
         if (!e) {
             res.send(results);
@@ -363,7 +478,10 @@ app.get("/emergencyTreatment/query", (req, res) => {
 })
 
 app.get("/epidemicArea/query", (req, res) => {
-    let sql = "select * from school.epidemicArea";
+    let sql = "select * from school.epidemicArea  ";
+    if (req.query["limit"] != null) {
+        sql += "limit " + req.query["limit"]
+    }
     var sqlParams;
     db.query(sql, sqlParams, (e, results) => {
         if (!e) {
@@ -374,17 +492,6 @@ app.get("/epidemicArea/query", (req, res) => {
     })
 })
 
-app.get("/orderdetails/query", (req, res) => {
-    let sql = 'SELECT * FROM school.orderdetails;';
-    var sqlParams = [];
-    db.query(sql, sqlParams, (e, results) => {
-        if (!e) {
-            res.send(results);
-        } else {
-            console.log(e.message);
-        }
-    })
-})
 
 
 app.get("/map", (req, res) => {
