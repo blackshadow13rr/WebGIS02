@@ -1,5 +1,6 @@
 <template>
   <div id="MapView"></div>
+  <div id="layerchange"><el-button type="切换">Info</el-button></div>
 </template>
 
 <script>
@@ -27,6 +28,7 @@ export default {
           "esri/geometry/Extent",
           "esri/layers/MapImageLayer",
           "esri/layers/FeatureLayer",
+          "esri/widgets/LayerList/LayerListViewModel",
         ],
         options
       ).then(
@@ -43,35 +45,59 @@ export default {
           Extent,
           MapImageLayer,
           FeatureLayer,
+          LayerListViewModel,
         ]) => {
           esriConfig.apiKey =
             "AAPK37853f2d8fd242f6ad9df392845bb0855YYrv-aaUh64MrNqmp51tQ6FZBa-YBx9mlRhkoWfEq0QOAMSzDrRbVxMEBBRfVXV";
-
-          const layer = new MapImageLayer({
-            url: "https://edutrial.geoscene.cn/geoscene/rest/services/C991_hosGradingSymbol/MapServer",
-            blendMode: "average",
-            title:"医疗资源",
-          });
-
           const map = new Map({
             basemap: "topo-vector",
-            layers: [layer],
           });
           const view = new MapView({
             container: "MapView",
             map: map,
             center: [104.08, 30.68],
-            zoom: 16,
+            zoom: 12,
           });
+
+          var hospitalLayer1 = new FeatureLayer({
+            url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/C991_hosGradingSymbol/FeatureServer/1",
+            blendMode: "darken",
+            title: "分级色彩",
+            visible: false,
+          });
+          map.add(hospitalLayer1);
+          var hospitalLayer2 = new FeatureLayer({
+            url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/C991_hosGradingSymbol/FeatureServer/2",
+            title: "分级符号",
+            visible: false,
+          });
+          map.add(hospitalLayer2);
+          const hospitalscale = new MapImageLayer({
+            url: "https://edutrial.geoscene.cn/geoscene/rest/services/C991_BigHos1111/MapServer",
+            title: "医院规模",
+            visible: true,
+          });
+          map.add(hospitalscale);
           const homeBtn = new Home({
             view: view,
           });
-          const scaleBar = new ScaleBar({
-            view: view,
-            unit: "dual",
-          });
           const layerList = new LayerList({
             view: view,
+          });
+          let changeLayer = document.getElementById("layerchange");
+          changeLayer.addEventListener("click", async () => {
+            if(hospitalscale.visible ==true){
+              hospitalLayer1.visible = true
+              hospitalLayer2.visible = true
+              hospitalscale.visible = false
+              return
+            }
+            if(hospitalLayer1.visible == true){
+              hospitalLayer1.visible = false
+              hospitalLayer2.visible = false
+              hospitalscale.visible = true
+              return
+            }
           });
           const legend = new Legend({
             view: view,
@@ -93,16 +119,22 @@ export default {
             visible: false,
           });
           view.ui.add(homeBtn, "top-left");
-          view.ui.add(scaleBar, "bottom-right");
           view.ui.add(layerListExpand, "top-right");
           view.ui.add(legendExpand, "bottom-left");
           view.ui.add(compass, "top-left");
-          layer.when(() => {
+          view.ui.add([
+            {
+              component: "layerchange",
+              position: "bottom-right",
+              index: 1,
+            },
+          ]);
+          /* hospitalscale.when(() => {
             const initialExtent = Extent.fromJSON(
-              layer.sourceJSON.initialExtent
+              hospitalscale.sourceJSON.initialExtent
             );
             view.goTo(initialExtent);
-          });
+          }); */
           // load the Compass only when the view is rotated
           view.watch("rotation", function (rotation) {
             if (rotation && !compass.visible) {

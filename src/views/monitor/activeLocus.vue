@@ -55,11 +55,14 @@ export default {
             });
             view.ui.add(homeBtn, "top-left");
             //添加图层
-
+            var RiskPointLayer = new FeatureLayer({
+              url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/C991_timeAnalysis_Dots/FeatureServer/0",
+            });
+            map.add(RiskPointLayer);
             var OptimizedHotSpot = new FeatureLayer({
               url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/timeAnalysis/FeatureServer/1",
             });
-            map.add(OptimizedHotSpot);
+            map.add(OptimizedHotSpot, 0);
             var highriskLayer = new FeatureLayer({
               url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/zhonggao/FeatureServer/0",
             });
@@ -67,33 +70,27 @@ export default {
             var middleriskLayer = new FeatureLayer({
               url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/zhonggao/FeatureServer/1",
             });
-            console.log(middleriskLayer);
+
             map.add(middleriskLayer);
-            var timeAnalysis = new MapImageLayer({
-              url: "https://edutrial.geoscene.cn/geoscene/rest/services/timeA/MapServer",
-            });
-            map.add(timeAnalysis);
-            var timeAnalysis = new FeatureLayer({
-              url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/timeAnalysis/FeatureServer/0",
-            });
-            map.add(timeAnalysis);
-            view.whenLayerView(middleriskLayer).then((lv) => {
+
+            console.log(RiskPointLayer.timeInfo);
+            view.whenLayerView(RiskPointLayer).then((lv) => {
               // around up the full time extent to full hour
               timeSlider.fullTimeExtent =
-                middleriskLayer.timeInfo.fullTimeExtent.expandTo("hours");
+                RiskPointLayer.timeInfo.fullTimeExtent.expandTo("hours");
               timeSlider.stops = {
-                interval: middleriskLayer.timeInfo.interval,
+                interval: RiskPointLayer.timeInfo.interval,
               };
-              timeSlider.fullTimeExtent.start =
+              /* timeSlider.fullTimeExtent.start =
                 "Mon Aug 01 2022 00:00:00 GMT+0800 (GMT+08:00)";
               timeSlider.fullTimeExtent.end =
                 "Sun Aug 07 2022 00:00:00 GMT+0800 (GMT+08:00)";
               timeSlider.stops = {
                 interval: {
-                  value: 12,
+                  value: 24,
                   unit: "hours",
                 },
-              };
+              }; */
             });
             //时间轴微件
             const timeSlider = new TimeSlider({

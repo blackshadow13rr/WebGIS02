@@ -1,5 +1,6 @@
 <template>
   <div id="MapView"></div>
+  <div id="timeSlider"></div>
 </template>
 
 <script>
@@ -21,11 +22,20 @@ export default {
           "esri/views/MapView",
           "esri/layers/FeatureLayer",
           "esri/widgets/Legend",
-          "esri/renderers/HeatmapRenderer",
+          "esri/layers/MapImageLayer",
+          "esri/widgets/TimeSlider",
         ],
         options
       ).then(
-        ([esriConfig, Map, MapView, FeatureLayer, Legend, HeatmapRenderer]) => {
+        ([
+          esriConfig,
+          Map,
+          MapView,
+          FeatureLayer,
+          Legend,
+          MapImageLayer,
+          TimeSlider,
+        ]) => {
           esriConfig.apiKey =
             "AAPK37853f2d8fd242f6ad9df392845bb0855YYrv-aaUh64MrNqmp51tQ6FZBa-YBx9mlRhkoWfEq0QOAMSzDrRbVxMEBBRfVXV";
           const defaultSymbol = {
@@ -59,10 +69,37 @@ export default {
             center: [104.08, 30.68],
             zoom: 12,
           });
+          /* var timeAnalysis = new MapImageLayer({
+            url: "https://edutrial.geoscene.cn/geoscene/rest/services/C991_timeAnalysis/MapServer",
+            title:"活动轨迹热力图"
+          });
+          map.add(timeAnalysis); */ var HeatmaptimeAnalysis = new MapImageLayer(
+            {
+              url: "https://edutrial.geoscene.cn/geoscene/rest/services/C991_timeAnalysis/MapServer",
+              title: "活动轨迹热力图",
+            }
+          );
+          map.add(HeatmaptimeAnalysis);
+          view.whenLayerView(HeatmaptimeAnalysis).then((lv) => {
+            // around up the full time extent to full hour
+            timeSlider.fullTimeExtent =
+              HeatmaptimeAnalysis.timeInfo.fullTimeExtent.expandTo("hours");
+            timeSlider.stops = {
+              interval: HeatmaptimeAnalysis.timeInfo.interval,
+            };
+          });
+          //时间轴微件
+          const timeSlider = new TimeSlider({
+            container: "timeSlider",
+            view: view,
+            timeVisible: true,
+            loop: true,
+          });
+
           const supermarketLayer = new FeatureLayer({
             url: "https://localhost:6443/arcgis/rest/services/POI/MapServer/0",
             title: "物资点热力图",
-            view
+            view,
           });
           map.add(supermarketLayer);
           supermarketLayer.renderer = {
@@ -75,7 +112,7 @@ export default {
               { ratio: 0.8, color: "rgba(255, 140, 0, 1)" },
               { ratio: 1, color: "rgba(255, 0, 0, 1)" },
             ],
-            minDensity: 20,
+            minDensity: 0,
             maxDensity: 500,
             radius: 1,
           };
@@ -105,5 +142,12 @@ body,
   margin: 0;
   height: 100%;
   width: 100%;
+}
+
+#timeSlider {
+  position: absolute;
+  left: 20%;
+  right: 5%;
+  bottom: 20px;
 }
 </style>

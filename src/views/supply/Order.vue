@@ -48,9 +48,9 @@
           max-height="400"
           highlight-current-row
         >
-          <el-table-column prop="Address" label="地址" width="180" />
-          <el-table-column prop="Name" label="店名" width="180" />
-          <el-table-column prop="Phone_Number" label="电话" />
+          <el-table-column prop="Address" label="地址" width="230" />
+          <el-table-column prop="Name" label="店名" width="200" />
+          <el-table-column prop="Phone_Number" label="电话" width="140" />
         </el-table>
       </el-tab-pane>
       <el-tab-pane label="志愿者列表" name="third" :disabled="tabthree"
@@ -62,11 +62,20 @@
           >分配订单</el-button
         >
         <el-divider style="margin: 24px 0 0 0" />
-        <el-table :data="vlist" style="width: 100%" max-height="400">
-          <el-table-column type="selection" width="55" />
-          <el-table-column prop="Name" label="姓名" width="110" />
-          <el-table-column prop="Position" label="当前位置" width="250" />
-          <el-table-column prop="Phone_Number" label="电话" /> </el-table
+        <el-table
+          :data="vlist"
+          style="width: 100%"
+          max-height="400"
+          highlight-current-row
+          @row-click="getvtrigger"
+          id="vlist"
+        >
+          <el-table-column prop="RUuser" label="姓名" width="100" />
+          <el-table-column prop="Raddress" label="当前位置" width="230" />
+          <el-table-column
+            prop="RphoneNum"
+            label="电话"
+            width="150" /></el-table
       ></el-tab-pane>
       <el-tab-pane label="设置路径" name="fourth" :disabled="tabfour"
         ><div id="routeBox"></div>
@@ -80,7 +89,7 @@
       >
     </el-tabs>
   </el-card>
-  <el-card id="buffermenu">
+  <el-card id="buffermenu" style="display: none">
     <el-form label-width="90px">
       <div id="sketchbox"></div>
       <el-form-item label="缓冲区半径:">
@@ -99,6 +108,7 @@ import {
   GetOrderList,
   GetOrderPointById,
   SetOrder,
+  Getvolunteer,
 } from "@/../api/admin";
 import { onMounted, onBeforeMount, reactive, toRefs } from "vue";
 import { AddLocation, Edit } from "@element-plus/icons-vue";
@@ -129,6 +139,8 @@ export default {
       trigger: false,
       vlist: [],
       activeName: "odlist",
+      vtrigger: false,
+      selectedvolunteer: [],
       tabtwo: true,
       tabthree: true,
       tabfour: true,
@@ -142,6 +154,10 @@ export default {
     let gotoPoint = async (row) => {
       data.Oid = row.Oid;
       data.trigger = true;
+    };
+    let getvtrigger = (row) => {
+      data.selectedvolunteer = row;
+      data.vtrigger = true;
     };
     let createView = () => {
       var options = {
@@ -211,10 +227,11 @@ export default {
             let allStats = null;
             //停靠点
             let ordergeometry = null;
-            let volunteergeometry = null;
             let supplygeometry = null;
             let ordergeometryname = null;
             let supplygeometryname = null;
+            let volunteergeometry = null;
+            let volunteergeometryname = null;
             //路径模块
             const polygonBarriers = [];
 
@@ -290,6 +307,7 @@ export default {
               zoom: 13,
             });
             //添加绘制图层
+            var volunteerLayer = new GraphicsLayer();
             var sketchLayer = new GraphicsLayer();
             var bufferLayer = new GraphicsLayer();
             var orderLayer = new GraphicsLayer();
@@ -302,6 +320,7 @@ export default {
               facilitiesLayer,
               startLayer,
               selectedFacilitiesLayer,
+              volunteerLayer,
             ]);
             //全图按钮
             var homeBtn = new Home({
@@ -346,6 +365,10 @@ export default {
               console.log(ordergeometry);
               console.log(supplygeometry);
               routeLayer.stops = [
+                new Stop({
+                  name: volunteergeometryname,
+                  geometry: volunteergeometry,
+                }),
                 new Stop({
                   name: supplygeometryname,
                   geometry: supplygeometry,
@@ -392,20 +415,15 @@ export default {
             //分别添加图层
             var supermarketLayer = new FeatureLayer({
               title: "物资点",
-              url: "https://localhost:6443/arcgis/rest/services/POI/MapServer/0",
+              url: "https://localhost:6443/arcgis/rest/services/SPpoint/MapServer/0",
               popupTemplate: supermarkettemplate,
             });
             map.add(supermarketLayer, 0);
             var highriskLayer = new FeatureLayer({
-              title: "高风险地区",
-              url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/zhonggao/FeatureServer/0",
+              title: "中高风险地区",
+              url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/C991_riskBarrierPolygons/FeatureServer/0",
             });
             map.add(highriskLayer, 0);
-            var middleriskLayer = new FeatureLayer({
-              title: "中风险地区",
-              url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/zhonggao/FeatureServer/1",
-            });
-            map.add(middleriskLayer, 0);
             //搜索图层
             var searchWidget = new Search({
               view: view,
@@ -435,6 +453,22 @@ export default {
               }
               return graphic;
             }
+            let setvlist = document.getElementById("vlist");
+            setvlist.addEventListener("click", async () => {
+              if (data.vtrigger === true) {
+                console.log(data.selectedvolunteer.id);
+                view.center = [
+                  data.selectedvolunteer.Rlon,
+                  data.selectedvolunteer.Rlat,
+                ];
+                let id = data.selectedvolunteer.id - 1;
+                console.log(volunteerLayer.graphics.items[id].geometry);
+                volunteergeometry = volunteerLayer.graphics.items[id].geometry;
+                volunteergeometryname =
+                  volunteerLayer.graphics.items[id].attributes.Raddress;
+                data.vtrigger = false;
+              }
+            });
             //分配订单按钮
             let setOrder = document.getElementById("setOrder");
             setOrder.addEventListener("click", async () => {
@@ -493,6 +527,8 @@ export default {
                 });
                 AutoQueryFirst(data.tempPoint[0]);
                 orderlistexpand.collapse();
+                const buffermenu = document.getElementById("buffermenu");
+                buffermenu.style.display = "block";
                 /* console.log(orderLayer.graphics.items[0]); */
                 //创建按钮
                 const createbufferBtn = document.getElementById("createbuffer");
@@ -671,15 +707,50 @@ export default {
             }
             document
               .getElementById("naviToClosestF")
-              .addEventListener("click", () => {
+              .addEventListener("click", async () => {
                 //最近设施点选择
                 findFacilities(orderLayer.graphics.items[itemindex].geometry);
                 ordergeometry = orderLayer.graphics.items[itemindex].geometry;
                 ordergeometryname =
                   orderLayer.graphics.items[itemindex].attributes.Oaddress;
+                let volunteer = await Getvolunteer();
+                console.log(volunteer);
+                data.vlist = volunteer;
+                addvPoint(volunteer);
                 data.activeName = "third";
                 data.tabthree = false;
               });
+            let addvPoint = (PointSet) => {
+              if (PointSet !== []) {
+                PointSet.forEach((result, index) => {
+                  createvPoint(
+                    PointSet[index].Rlon,
+                    PointSet[index].Rlat,
+                    PointSet[index]
+                  );
+                });
+              } else {
+                console.log("No order!");
+              }
+            };
+            let createvPoint = (lon, lat, data) => {
+              var point = new Point({
+                latitude: lat,
+                longitude: lon,
+                spatialReference: view.spatialReference,
+              });
+              var simpleMarkerSymbol = new SimpleMarkerSymbol({
+                style: "diamond",
+                color: "green",
+                size: "8px",
+                outline: {
+                  width: 1,
+                },
+              });
+              var graphic = new Graphic(point, simpleMarkerSymbol);
+              graphic.attributes = data;
+              volunteerLayer.graphics.add(graphic);
+            };
             //清空按钮
             function clear() {
               sketchGeometry = null;
@@ -825,15 +896,6 @@ export default {
                   poly = new PolygonBarrier({ geometry: element.geometry });
                   polygonBarriers.push(poly);
                 });
-              });
-              const query2 = middleriskLayer.createQuery();
-              query.returnGeometry = true;
-              middleriskLayer.queryFeatures(query2).then(function (response) {
-                let poly = null;
-                response.features.forEach((element) => {
-                  poly = new PolygonBarrier({ geometry: element.geometry });
-                  polygonBarriers.push(poly);
-                });
                 routeLayer.polygonBarriers = polygonBarriers;
               });
             }
@@ -889,6 +951,7 @@ export default {
       filterTag,
       createView,
       gotoPoint,
+      getvtrigger,
     };
   },
   methods: {},

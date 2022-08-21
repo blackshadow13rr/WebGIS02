@@ -35,6 +35,7 @@ export default {
           "esri/Graphic",
           "esri/renderers/FlowRenderer",
           "esri/widgets/Expand",
+          "esri/layers/MapImageLayer",
         ],
         options
       )
@@ -53,6 +54,7 @@ export default {
             Graphic,
             FlowRenderer,
             Expand,
+            MapImageLayer,
           ]) => {
             esriConfig.apiKey =
               "AAPK37853f2d8fd242f6ad9df392845bb0855YYrv-aaUh64MrNqmp51tQ6FZBa-YBx9mlRhkoWfEq0QOAMSzDrRbVxMEBBRfVXV";
@@ -86,28 +88,23 @@ export default {
               url: "https://localhost:6443/arcgis/rest/services/Point/Hospital/MapServer/0",
             });
             map.add(hospitalLayer, 0);
+
             //查询
             function queryStatistics() {
-              let statDefinitions = [
-                /* {
-                  onStatisticField: "district",
-                  outStatisticFieldName: "district_sum",
-                  statisticType: "sum",
-                }, */
-                {
-                  onStatisticField:
-                    "District",
-                  statisticType: "sum",
-                },
-              ];
+              let statDefinitions = {
+                onStatisticField:
+                  "CASE WHEN District = '成华区' THEN 1 ELSE 0 END",
+                outStatisticFieldName: "district_sum",
+                statisticType: "sum",
+              };
               const query = hospitalLayer.createQuery();
               /* query.geometry = sketchGeometry;
               query.distance = bufferSize; */
-              query.where = "District = '成华区'"; 
+              /* query.where = "District = '成华区'"; */
               query.outStatistics = statDefinitions;
 
               hospitalLayer.queryFeatures(query).then((result) => {
-                const allStats = result.features[0].attributes;
+                const allStats = result.features;
                 console.log(allStats);
                 /* updateChart(materialChart, [
                   allStats.material_concrete,

@@ -46,7 +46,6 @@ export default {
 
           const layer = new MapImageLayer({
             url: "https://edutrial.geoscene.cn/geoscene/rest/services/C991_densityAnalysis/MapServer",
-            blendMode: "average"
           });
           const map = new Map({
             basemap: "topo-vector",

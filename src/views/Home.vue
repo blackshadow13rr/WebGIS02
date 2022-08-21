@@ -51,7 +51,13 @@
             </el-icon>
             <span>地图</span>
           </template>
-          <el-menu-item index="/Home/3D">三维展示</el-menu-item>
+          <el-sub-menu index="3d"
+            ><template #title>三维展示</template>
+            <el-menu-item index="/Home/3D">三维场景轨迹</el-menu-item>
+            <el-menu-item index="/Home/Timecube"
+              >时空立方体</el-menu-item
+            ></el-sub-menu
+          >
           <el-menu-item index="/Home/DensityAnalysis">核密度分析</el-menu-item>
           <el-menu-item index="/Home/HeatMap">热力图展示</el-menu-item>
         </el-sub-menu>

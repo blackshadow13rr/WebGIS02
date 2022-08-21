@@ -123,7 +123,7 @@ export default {
               view
                 .goTo({
                   center: location,
-                  tilt: 45,
+                  tilt: 60,
                   scale: 2000,
                   heading: 360 - getHeading(location, prevLocation),
                   rotation: 360 - getHeading(location, prevLocation),

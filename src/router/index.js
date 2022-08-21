@@ -138,6 +138,12 @@ const routes = [
                 component: () =>
                     import ("../views/hospital/GradingSymbol.vue")
             },
+            {
+                path: "TimeCube",
+                name: "TimeCube",
+                component: () =>
+                    import ("../views/map/Timecube.vue")
+            },
         ]
     },
     {

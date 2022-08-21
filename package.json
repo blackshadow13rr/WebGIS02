@@ -17,7 +17,6 @@
     "echarts-wordcloud": "^2.0.0",
     "element-plus": "^2.2.2",
     "js-md5": "^0.7.3",
-    "lib-flexible": "^0.3.2",
     "mock-geolocation": "^1.0.11",
     "nodemon": "^2.0.19",
     "nprogress": "^0.2.0",

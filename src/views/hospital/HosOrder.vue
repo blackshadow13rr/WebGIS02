@@ -71,10 +71,16 @@
           >分配订单</el-button
         >
         <el-divider style="margin: 24px 0 0 0" />
-        <el-table :data="vlist" style="width: 100%" max-height="220">
-          <el-table-column type="selection" width="55" />
-          <el-table-column prop="RUuser" label="姓名" width="110" />
-          <el-table-column prop="Raddress" label="当前位置" width="250" />
+        <el-table
+          :data="vlist"
+          style="width: 100%"
+          max-height="220"
+          highlight-current-row
+          @row-click="getvtrigger"
+          id="vlist"
+        >
+          <el-table-column prop="RUuser" label="姓名" width="120" />
+          <el-table-column prop="Raddress" label="当前位置" width="300" />
           <el-table-column prop="RphoneNum" label="电话" /> </el-table
       ></el-tab-pane>
     </el-tabs>
@@ -104,6 +110,7 @@ import { AddLocation, Edit } from "@element-plus/icons-vue";
 import Supply from "@/views/supply/Supply.vue";
 import { $EleMsgNotifyError, $EleMsgNotifySuccess } from "@/../utils/alert.js";
 import Nprogress from "nprogress";
+import { color } from "echarts";
 export default {
   components: {
     Supply,
@@ -128,6 +135,8 @@ export default {
       tabtwo: true,
       tabthree: true,
       hosname: "",
+      vtrigger: false,
+      selectedvolunteer: [],
     });
     let orderdata = reactive({
       Oid: "",
@@ -142,6 +151,10 @@ export default {
     let gotoHosPoint = (row) => {
       data.hosname = row.name;
       data.hostrigger = true;
+    };
+    let getvtrigger = (row) => {
+      data.selectedvolunteer = row;
+      data.vtrigger = true;
     };
     let createView = () => {
       let options = {
@@ -174,6 +187,7 @@ export default {
           "esri/rest/closestFacility",
           "esri/rest/support/ClosestFacilityParameters",
           "esri/rest/support/FeatureSet",
+          "esri/widgets/Legend",
         ],
         options
       ).then(
@@ -201,6 +215,7 @@ export default {
           closestFacility,
           ClosestFacilityParameters,
           FeatureSet,
+          Legend,
         ]) => {
           esriConfig.apiKey =
             "AAPK37853f2d8fd242f6ad9df392845bb0855YYrv-aaUh64MrNqmp51tQ6FZBa-YBx9mlRhkoWfEq0QOAMSzDrRbVxMEBBRfVXV";
@@ -221,26 +236,13 @@ export default {
           //停靠点
           let ordergeometry = null;
           let volunteergeometry = null;
+          let volunteergeometryname = null;
           let supplygeometry = null;
           let ordergeometryname = null;
           let supplygeometryname = null;
 
           //路径模块
-          const polygonBarriers = [
-            new PolygonBarrier({
-              geometry: polygonBarrierGraphic(104.08, 30.68),
-            }),
-          ];
-
-          function polygonBarrierGraphic(lon, lat) {
-            return new Circle({
-              center: [lon, lat],
-              geodesic: true,
-              numberOfPoints: 100,
-              radius: 400,
-              radiusUnit: "meters",
-            });
-          }
+          const polygonBarriers = [];
           //接收参数：
           //起点以及终点的name、geometry对象
           const routeLayer = new RouteLayer({
@@ -263,11 +265,13 @@ export default {
           });
           //分别添加图层
           var highriskLayer = new FeatureLayer({
-            url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/C991Facilities/FeatureServer/7",
+            url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/C991_riskBarrierPolygons/FeatureServer/0",
+            title:"中高风险地区"
           });
           map.add(highriskLayer);
           var Bighospital1 = new FeatureLayer({
-            url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/bighos/FeatureServer/0",
+            url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/bighos/FeatureServer/1",
+            title:"医院"
           });
           map.add(Bighospital1);
           view.map.addMany([orderLayer, routeLayer, volunteerLayer]);
@@ -314,6 +318,10 @@ export default {
             console.log(ordergeometry);
             console.log(supplygeometry);
             routeLayer.stops = [
+              new Stop({
+                name: volunteergeometryname,
+                geometry: volunteergeometry,
+              }),
               new Stop({
                 name: supplygeometryname,
                 geometry: supplygeometry,
@@ -390,7 +398,22 @@ export default {
               data.trigger = false;
             }
           });
-
+          let setvlist = document.getElementById("vlist");
+          setvlist.addEventListener("click", async () => {
+            if (data.vtrigger === true) {
+              console.log(data.selectedvolunteer.id);
+              view.center = [
+                data.selectedvolunteer.Rlon,
+                data.selectedvolunteer.Rlat,
+              ];
+              let id = data.selectedvolunteer.id - 1;
+              console.log(volunteerLayer.graphics.items[id].geometry);
+              volunteergeometry = volunteerLayer.graphics.items[id].geometry;
+              volunteergeometryname =
+                volunteerLayer.graphics.items[id].attributes.Raddress;
+              data.vtrigger = false;
+            }
+          });
           let sethoslist = document.getElementById("hoslist");
           sethoslist.addEventListener("click", async () => {
             if (data.hostrigger === true) {
@@ -436,7 +459,6 @@ export default {
             }
           };
           let addvPoint = (PointSet) => {
-            orderLayer.removeAll();
             if (PointSet !== []) {
               PointSet.forEach((result, index) => {
                 createvPoint(
@@ -597,13 +619,26 @@ export default {
               index: 1,
             },
           ]);
+          view.ui.add(
+            new Legend({
+              view: view,
+            }),
+            "bottom-right"
+          );
         }
       );
     };
     onMounted(() => {
       createView();
     });
-    return { ...toRefs(data), filterTag, createView, gotoPoint, gotoHosPoint };
+    return {
+      ...toRefs(data),
+      filterTag,
+      createView,
+      gotoPoint,
+      gotoHosPoint,
+      getvtrigger,
+    };
   },
 };
 </script>
