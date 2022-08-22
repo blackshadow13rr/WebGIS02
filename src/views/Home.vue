@@ -38,10 +38,21 @@
             <el-icon>
               <monitor />
             </el-icon>
-            <span>疫情</span>
-          </template>
-          <el-menu-item index="/Home/Monitor">疫情监控</el-menu-item>
-          <el-menu-item index="/Home/activeLocus">活动轨迹</el-menu-item>
+            <span>疫情</span> </template
+          ><el-sub-menu index="statistic"
+            ><template #title>疫情监控</template>
+            <el-menu-item index="/Home/Monitor">空间统计</el-menu-item
+            ><el-menu-item index="/Home/statistic"
+              >统计面板</el-menu-item
+            ></el-sub-menu
+          >
+          <el-sub-menu index="track"
+            ><template #title>时空数据</template
+            ><el-menu-item index="/Home/activeLocus">动态轨迹</el-menu-item
+            ><el-menu-item index="/Home/HighRisk"
+              >中高风险动态变化</el-menu-item
+            ></el-sub-menu
+          >
           <el-menu-item index="/Home/tempPCRSpot">临时核酸点</el-menu-item>
         </el-sub-menu>
         <el-sub-menu index="map">
@@ -57,7 +68,7 @@
             <el-menu-item index="/Home/Timecube"
               >时空立方体</el-menu-item
             ></el-sub-menu
-          >
+          ><el-menu-item index="/Home/cluster">密度聚类</el-menu-item>
           <el-menu-item index="/Home/DensityAnalysis">核密度分析</el-menu-item>
           <el-menu-item index="/Home/HeatMap">热力图展示</el-menu-item>
         </el-sub-menu>
@@ -237,7 +248,7 @@ export default {
       router.push("/Message");
     };
     let goHome = () => {
-      router.push("/Home");
+      router.push("/Home/Monitor");
     };
     return {
       ...toRefs(pageInfo),

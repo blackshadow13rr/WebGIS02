@@ -82,7 +82,7 @@ export default {
         let isLogined = await Login(loginData);
         if (isLogined) {
           //登录成功，跳转到Home页
-          $router.push("/Home/Map");
+          $router.push("/Home/Monitor");
         }
       }
     };

@@ -150,3 +150,7 @@ export let Getvolunteer = async() => {
     let results = await $get("/Map/Getvolunteer");
     return results;
 }
+export let reportquery = async() => {
+    let results = await $get("/reports/query");
+    return results;
+}

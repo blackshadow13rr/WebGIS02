@@ -198,23 +198,22 @@ export default {
             });
             view.ui.add(homeBtn, "top-left");
             //添加图层
-            var RiskPointLayer = new FeatureLayer({
-              url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/C991_timeAnalysis_Dots/FeatureServer/0",
+            var highriskLayer = new FeatureLayer({
+              url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/zhonggao/FeatureServer/0",
             });
-            map.add(RiskPointLayer);
-            var OptimizedHotSpot = new FeatureLayer({
-              url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/timeAnalysis/FeatureServer/1",
+            map.add(highriskLayer);
+            var middleriskLayer = new FeatureLayer({
+              url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/zhonggao/FeatureServer/1",
             });
-            map.add(OptimizedHotSpot, 0);
-            console.log(RiskPointLayer.timeInfo);
-            view.whenLayerView(RiskPointLayer).then((lv) => {
+            map.add(middleriskLayer);
+            view.whenLayerView(highriskLayer).then((lv) => {
               // around up the full time extent to full hour
               timeSlider.fullTimeExtent =
-                RiskPointLayer.timeInfo.fullTimeExtent.expandTo("hours");
+                highriskLayer.timeInfo.fullTimeExtent.expandTo("hours");
               timeSlider.stops = {
-                interval: RiskPointLayer.timeInfo.interval,
+                interval: highriskLayer.timeInfo.interval,
               };
-              /* timeSlider.fullTimeExtent.start =
+              timeSlider.fullTimeExtent.start =
                 "Mon Aug 01 2022 00:00:00 GMT+0800 (GMT+08:00)";
               timeSlider.fullTimeExtent.end =
                 "Sun Aug 07 2022 00:00:00 GMT+0800 (GMT+08:00)";
@@ -223,7 +222,7 @@ export default {
                   value: 24,
                   unit: "hours",
                 },
-              }; */
+              };
             });
             //时间轴微件
             const timeSlider = new TimeSlider({
@@ -232,20 +231,6 @@ export default {
               timeVisible: true,
               loop: true,
             });
-            /* timeAnalysis.renderer = {
-              type: "heatmap",
-              field: "date",
-              colorStops: [
-                { ratio: 0, color: "rgba(255, 255, 255, 0)" },
-                { ratio: 0.2, color: "rgba(255, 255, 255, 1)" },
-                { ratio: 0.5, color: "rgba(255, 140, 0, 1)" },
-                { ratio: 0.8, color: "rgba(255, 140, 0, 1)" },
-                { ratio: 1, color: "rgba(255, 0, 0, 1)" },
-              ],
-              minDensity: 0,
-              maxDensity: 500,
-              radius: 50,
-            }; */
             view.ui.remove("attribution");
           }
         )

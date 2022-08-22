@@ -2,49 +2,49 @@
   <div class="Container">
     <div class="box">
       <el-card class="box-card" style="background-color: #67c23a">
-        <div class="headline">24</div>
+        <div class="headline">1654</div>
         <div class="icon">
           <el-icon size="80px"><Avatar /></el-icon>
         </div>
         <div class="text item">检测人数：</div>
-        <div class="bottom" style="background-color: #529b2e">
-        </div>
+        <div class="bottom" style="background-color: #529b2e"></div>
       </el-card>
       <el-card class="box-card" style="background-color: #409eff">
-        <div class="headline">24</div>
+        <div class="headline">3</div>
         <div class="icon">
           <el-icon size="80px"><Histogram /></el-icon>
         </div>
         <div class="text item">上报人数：</div>
-        <div class="bottom">
-        </div>
+        <div class="bottom"></div>
       </el-card>
       <el-card class="box-card" style="background-color: #e6a23c">
-        <div class="headline">24</div>
+        <div class="headline">5</div>
         <div class="icon">
           <el-icon size="80px"><PieChart /></el-icon>
         </div>
         <div class="text item">新增风险地区：</div>
-        <div class="bottom" style="background-color: #b88230">
-        </div>
+        <div class="bottom" style="background-color: #b88230"></div>
       </el-card>
       <el-card class="box-card" style="background-color: #f56c6c">
-        <div class="headline">24</div>
+        <div class="headline">10</div>
         <div class="icon">
           <el-icon size="80px"><Odometer /></el-icon>
         </div>
         <div class="text item">新增患者：</div>
-        <div class="bottom" style="background-color: #c45656">
-        </div>
+        <div class="bottom" style="background-color: #c45656"></div>
       </el-card>
     </div>
     <div class="box">
       <el-table :data="tableData" border style="width: 100%">
-        <el-table-column prop="date" label="时间" />
-        <el-table-column prop="address" label="位置" />
-        <el-table-column prop="type" label="类型" />
-        <el-table-column prop="picture" label="图片" />
-        <el-table-column prop="detail" label="详情" />
+        <el-table-column prop="Rid" label="id" />
+        <el-table-column prop="Rdate" label="时间" />
+        <el-table-column prop="Raddress" label="位置" />
+        <el-table-column prop="Rtype" label="类型" />
+        <el-table-column prop="Rimage" label="图片"
+          ><template #default="scope"
+            ><img :src="scope.row.Rimage" style="width: 200px;height: 150px" /></template
+        ></el-table-column>
+        <el-table-column prop="Rdetail" label="详情" />
       </el-table>
     </div>
   </div>
@@ -58,7 +58,8 @@ import {
   PieChart,
   CirclePlusFilled,
 } from "@element-plus/icons-vue";
-import { reactive, toRefs, onBeforeMount } from "vue";
+import { reportquery } from "@/../api/admin";
+import { reactive, toRefs, onBeforeMount, onMounted } from "vue";
 export default {
   name: "Message",
   components: {
@@ -70,13 +71,23 @@ export default {
   },
   setup() {
     let Data = reactive({
-      address: "",
-      date: "",
-      type: "",
-      detail: "",
-      picture: "",
+      tableData: [],
+      /* Rid:"",
+      Raddress: "",
+      Rdate: "",
+      Rtype: "",
+      Rdetail: "",
+      Rimage: "", */
     });
-    return {};
+    let getdata = async () => {
+      let set = await reportquery();
+      console.log(set);
+      Data.tableData = await reportquery();
+    };
+    onMounted(() => {
+      getdata();
+    });
+    return { getdata, ...toRefs(Data) };
   },
 };
 </script>

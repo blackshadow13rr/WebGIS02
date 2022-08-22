@@ -1,6 +1,6 @@
 <template>
   <div id="MapView"></div>
-  <div id="layerchange"><el-button type="Info">切换</el-button></div>
+  <div id="layerchange"><el-button type="切换">切换</el-button></div>
 </template>
 
 <script>
@@ -202,25 +202,27 @@ export default {
             zoom: 12,
           });
 
-          var hospitalLayer1 = new FeatureLayer({
-            url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/C991_hosGradingSymbol/FeatureServer/1",
+          var cluster1 = new FeatureLayer({
+            url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/C991_DensityBasedClustering/FeatureServer/0",
             blendMode: "darken",
-            title: "分级色彩",
-            visible: false,
-          });
-          map.add(hospitalLayer1);
-          var hospitalLayer2 = new FeatureLayer({
-            url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/C991_hosGradingSymbol/FeatureServer/2",
-            title: "分级符号",
-            visible: false,
-          });
-          map.add(hospitalLayer2);
-          const hospitalscale = new MapImageLayer({
-            url: "https://edutrial.geoscene.cn/geoscene/rest/services/C991_BigHos1111/MapServer",
-            title: "医院规模",
+            title: "活动轨迹聚类",
             visible: true,
           });
-          map.add(hospitalscale);
+          map.add(cluster1);
+          var cluster2 = new FeatureLayer({
+            url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/cluster/FeatureServer/0",
+            blendMode: "darken",
+            title: "医疗设施点多元聚类",
+            visible: false,
+          });
+          map.add(cluster2);
+          var cluster3 = new FeatureLayer({
+            url: "https://edutrial.geoscene.cn/geoscene/rest/services/Hosted/cluster/FeatureServer/1",
+            blendMode: "darken",
+            title: "医疗设施点聚类和异常值分析",
+            visible: false,
+          });
+          map.add(cluster3);
           const homeBtn = new Home({
             view: view,
           });
@@ -229,22 +231,26 @@ export default {
           });
           let changeLayer = document.getElementById("layerchange");
           changeLayer.addEventListener("click", async () => {
-            if (hospitalscale.visible == true) {
-              hospitalLayer1.visible = true;
-              hospitalLayer2.visible = true;
-              hospitalscale.visible = false;
+            if (cluster1.visible == true) {
+              cluster1.visible = false;
+              cluster2.visible = true;
+              cluster3.visible = false;
               return;
             }
-            if (hospitalLayer1.visible == true) {
-              hospitalLayer1.visible = false;
-              hospitalLayer2.visible = false;
-              hospitalscale.visible = true;
+            if (cluster2.visible == true) {
+              cluster1.visible = false;
+              cluster2.visible = false;
+              cluster3.visible = true;
+              return;
+            }
+            if (cluster3.visible == true) {
+              cluster1.visible = true;
+              cluster2.visible = false;
+              cluster3.visible = false;
               return;
             }
           });
-          const legend = new Legend({
-            view: view,
-          });
+          const legend = new Legend({});
           const layerListExpand = new Expand({
             view: view,
             content: layerList,

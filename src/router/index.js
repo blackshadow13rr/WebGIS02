@@ -144,6 +144,28 @@ const routes = [
                 component: () =>
                     import ("../views/map/Timecube.vue")
             },
+            {
+                path: "tempPCRSpot",
+                name: "tempPCRSpot",
+                component: () =>
+                    import ("../views/monitor/tempPCRSpot.vue")
+            },
+            {
+                path: "Statistic",
+                name: "Statistic",
+                component: () =>
+                    import ("../views/monitor/Statistic.vue")
+            }, {
+                path: "HighRisk",
+                name: "HighRisk",
+                component: () =>
+                    import ("../views/monitor/HighRisk.vue")
+            }, {
+                path: "cluster",
+                name: "cluster",
+                component: () =>
+                    import ("../views/monitor/cluster.vue")
+            },
         ]
     },
     {
